@@ -6,7 +6,11 @@ const userSchema = new mongoose.Schema(
         lastName: { type: String },
         email: { type: String, required: true, unique: true },
         password: { type: String, required: true },
-        role: { type: String, enum: ["user", "admin"], default: "user" }, // Role management
+        role: { type: String, enum: ["user", "admin"], default: "user" },
+
+        // Track message limits
+        dailyMessageCount: { type: Number, default: 0 },
+        lastMessageDate: { type: Date, default: null },
     },
     { timestamps: true }
 );

@@ -11,7 +11,8 @@ const chatRoutes = require('./routes/chatRoutes');
 const reportRoutes = require('./routes/reportRoutes');
 const userRoutes = require('./routes/userRoutes');
 const morgan = require('morgan');
-const {deleteOldConversations} = require('./utils/cleanupService');
+const deleteOldConversations = require('./utils/cleanupService');
+const resetDailyLimit = require('./utils/resetDailyLimit');
 
 const app = express();
 
@@ -19,7 +20,7 @@ const app = express();
 connectDB()
 	.then(() => {
 		deleteOldConversations(); // Run cleanup at startup
-		setInterval(deleteOldConversations, 24 * 60 * 60 * 1000); // Run cleanup every 24 hours
+		resetDailyLimit();
 	});
 
 // Middleware

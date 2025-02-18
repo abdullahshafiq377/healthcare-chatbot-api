@@ -2,6 +2,7 @@ require('dotenv')
 	.config('../../.env');
 const Conversation = require('../models/Conversation');
 const Message = require('../models/Message');
+const User = require('../models/User');
 const axios = require('axios');
 
 // Start a new conversation
@@ -26,6 +27,7 @@ exports.sendMessage = async (req, res) => {
 	try {
 		const {conversationId, text} = req.body;
 		const userId = req.session.user.id;
+		const user = await User.findById(userId);
 		
 		let conversation = null;
 		
@@ -42,6 +44,11 @@ exports.sendMessage = async (req, res) => {
 		if (!conversation) {
 			return res.status(404)
 			          .json({message: 'Conversation not found'});
+		}
+		
+		if (!user) {
+			return res.status(404)
+			          .json({message: 'User not found'});
 		}
 		
 		// Save user's message
@@ -78,7 +85,10 @@ exports.sendMessage = async (req, res) => {
 		conversation.messages.push(botMessage._id);
 		await conversation.save();
 		
-		res.json({userMessage, botMessage});
+        user.dailyMessageCount += 1;
+        await user.save();
+		
+		res.json({userMessage, botMessage, attemptsLeft: process.env.MESSAGE_LIMIT - user.dailyMessageCount});
 	} catch (error) {
 		console.log(error);
 		res.status(500)
