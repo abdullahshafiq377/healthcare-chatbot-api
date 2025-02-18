@@ -4,11 +4,11 @@ const Report = require("../models/Report");
 exports.createReport = async (req, res) => {
     try {
         const { title, description } = req.body;
-        console.log(req.user.userId);
+        console.log(req.session.user.id);
         const report = new Report({
             title,
             description,
-            user: req.user.userId
+            user: req.session.user.id
         });
 
         await report.save();
@@ -22,7 +22,7 @@ exports.createReport = async (req, res) => {
 // Get all reports (Admin only)
 exports.getAllReports = async (req, res) => {
     try {
-        const reports = await Report.find().populate("user", "email");
+       const reports = await Report.find().populate("user", "firstName lastName email");
         res.status(200).json(reports);
     } catch (error) {
         res.status(500).json({ message: "Server error" });
@@ -52,7 +52,7 @@ exports.updateReportStatus = async (req, res) => {
 // Get reports by user
 exports.getUserReports = async (req, res) => {
     try {
-        const reports = await Report.find({ user: req.user.userId });
+        const reports = await Report.find({ user: req.session.user.id });
         res.status(200).json(reports);
     } catch (error) {
         res.status(500).json({ message: "Server error" });

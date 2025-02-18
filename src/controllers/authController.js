@@ -1,82 +1,89 @@
 const bcrypt = require('bcryptjs');
-const jwt = require('jsonwebtoken');
 const User = require('../models/User');
-const sendEmail = require('../utils/emailService');
 
 exports.register = async (req, res) => {
 	try {
-		const {email, password, firstName, lastName} = req.body;
-		const userExists = await User.findOne({email});
-		
+		const { email, password, firstName, lastName } = req.body;
+		const userExists = await User.findOne({ email });
+
 		if (userExists) {
-			return res.status(400)
-			          .json({message: 'User already exists'});
+			return res.status(400).json({ message: 'User already exists' });
 		}
-		
+
 		const hashedPassword = await bcrypt.hash(password, 10);
-		const newUser = new User({email, password: hashedPassword, firstName, lastName});
+		const newUser = new User({ email, password: hashedPassword, firstName, lastName });
 		await newUser.save();
-		
-		// Send Welcome Email
-		// const emailContent = `<h2>Welcome to Our App</h2>
-		//     <p>Thank you for registering. Enjoy our services!</p>`;
-		// sendEmail(email, "Welcome to Our App", emailContent);
-		
-		res.status(201)
-		   .json({message: 'User registered successfully'});
+
+		res.status(201).json({ message: 'User registered successfully' });
 	} catch (error) {
-		res.status(500)
-		   .json({message: 'Server error'});
+		res.status(500).json({ message: 'Server error' });
 	}
 };
 
 exports.login = async (req, res) => {
 	try {
-		const {email, password} = req.body;
-		const user = await User.findOne({email});
+		const { email, password } = req.body;
+		const user = await User.findOne({ email });
+
 		if (!user) {
-			return res.status(400)
-			          .json({message: 'Invalid credentials'});
+			return res.status(400).json({ message: 'Invalid credentials' });
 		}
-		
+
 		const isMatch = await bcrypt.compare(password, user.password);
 		if (!isMatch) {
-			return res.status(400)
-			          .json({message: 'Invalid credentials'});
+			return res.status(400).json({ message: 'Invalid credentials' });
 		}
-		
-		const token = jwt.sign({userId: user._id, email: user.email, role: user.role}, process.env.JWT_SECRET,
-		                       {expiresIn: '1h'});
-		
-		res.cookie('token', token, {httpOnly: true, secure: false});
+
+		// Store user details in session
+		req.session.user = {
+			id: user._id,
+			email: user.email,
+			role: user.role,
+			firstName: user.firstName,
+			lastName: user.lastName,
+		};
+
 		res.json({
-			         message: 'Logged in successfully', token, user: {
-				id: user._id, role: user.role, firstName: user.firstName, lastName: user.lastName, email: user.email
-			}
-		         });
+			message: 'Logged in successfully',
+			user: req.session.user
+		});
 	} catch (error) {
-		res.status(500)
-		   .json({message: 'Server error'});
+		res.status(500).json({ message: 'Server error' });
 	}
 };
 
 exports.getProfile = async (req, res) => {
 	try {
-		const user = await User.findById(req.user.userId)
-		                       .select('-password');
-		if (!user) {
-			return res.status(404)
-			          .json({message: 'User not found'});
+		if (!req.session.user) {
+			return res.status(401).json({ message: 'Unauthorized' });
 		}
-		
-		res.json({user});
+
+		const user = await User.findById(req.session.user.id).select('-password');
+		if (!user) {
+			return res.status(404).json({ message: 'User not found' });
+		}
+
+		res.json({ user });
 	} catch (error) {
-		res.status(500)
-		   .json({message: 'Server error'});
+		res.status(500).json({ message: 'Server error' });
 	}
 };
 
 exports.logout = (req, res) => {
-	res.clearCookie('token');
-	res.json({message: 'Logged out'});
+	req.session.destroy((err) => {
+		if (err) {
+			return res.status(500).json({ message: 'Logout failed' });
+		}
+		res.json({ message: 'Logged out successfully' });
+	});
+};
+
+exports.checkSession = (req, res) => {
+    if (req.session.user) {
+        return res.json({
+            isAuthenticated: true,
+            user: req.session.user
+        });
+    }
+    res.json({ isAuthenticated: false });
 };
