@@ -43,7 +43,7 @@ app.use(
 			                                 dbName: process.env.DB_NAME,
 		                                 }),
 		        cookie: {
-			        httpOnly: false,
+			        httpOnly: true,
 			        secure: false,
 			        sameSite: 'none',
 			        maxAge: 1000 * 60 * 60 * 24, // 1 day
