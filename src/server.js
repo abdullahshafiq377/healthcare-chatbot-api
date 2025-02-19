@@ -29,7 +29,7 @@ app.use(express.json());
 app.set('trust proxy', 1); // Trust the first proxy
 app.use(cookieParser());
 app.use(cors({
-	             origin: ['http://localhost:3000', 'http://18.212.19.72'],
+	             origin: ['http://localhost:3000', 'https://www.vaccinesupport.co'],
 	             credentials: true
              }));
 
@@ -47,7 +47,7 @@ app.use(
 		        cookie: {
 			        httpOnly: true,
 			        secure: true,
-			        sameSite: 'none',
+			        sameSite: 'lax',
 			        maxAge: 1000 * 60 * 60 * 24, // 1 day
 		        },
 	        })
