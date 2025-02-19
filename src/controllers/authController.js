@@ -101,12 +101,33 @@ exports.logout = (req, res) => {
 	});
 };
 
-exports.checkSession = (req, res) => {
-	if (req.session.user) {
-		return res.json({
-			                isAuthenticated: true,
-			                user: req.session.user
-		                });
+exports.checkSession = async (req, res) => {
+	try {
+		if (!req.session.user) {
+			return res.json({ isAuthenticated: false });
+		}
+
+		// Check if the user still exists in the database
+		const user = await User.findById(req.session.user.id);
+		if (!user) {
+			// Destroy the session properly
+			req.session.destroy((err) => {
+				if (err) {
+					console.error("Error destroying session:", err);
+					return res.status(500).json({ message: "Error logging out" });
+				}
+				res.clearCookie("connect.sid"); // Remove session cookie
+				return res.json({ isAuthenticated: false, message: "Your account has been deleted." });
+			});
+		} else {
+			return res.json({
+				isAuthenticated: true,
+				user: req.session.user
+			});
+		}
+	} catch (error) {
+		res.status(500).json({ message: "Server error" });
 	}
-	res.json({isAuthenticated: false});
 };
+
+

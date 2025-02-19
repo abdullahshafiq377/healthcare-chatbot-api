@@ -28,7 +28,7 @@ app.use(express.json());
 app.set('trust proxy', 1); // Trust the first proxy
 app.use(cookieParser());
 app.use(cors({
-	             origin: ['http://localhost:3000', 'https://www.vaccinesupport.co'],
+	             origin: ['http://localhost:3000', 'https://www.vaccinesupport.co', 'https://vaccinesupport.co'],
 	             credentials: true
              }));
 

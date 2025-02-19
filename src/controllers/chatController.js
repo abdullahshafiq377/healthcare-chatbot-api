@@ -85,8 +85,8 @@ exports.sendMessage = async (req, res) => {
 		conversation.messages.push(botMessage._id);
 		await conversation.save();
 		
-        user.dailyMessageCount += 1;
-        await user.save();
+		user.dailyMessageCount += 1;
+		await user.save();
 		
 		res.json({userMessage, botMessage, attemptsLeft: process.env.MESSAGE_LIMIT - user.dailyMessageCount});
 	} catch (error) {
@@ -156,13 +156,14 @@ exports.getUserConversations = async (req, res) => {
 		                                        .select('_id title createdAt updatedAt');
 		
 		if (!conversations.length) {
-			return res.status(404)
-			          .json({message: 'No conversations found for this user'});
+			return res
+				.json({message: 'No conversations found for this user'});
 		}
 		
 		res.json(conversations);
 	} catch (error) {
 		res.status(500)
 		   .json({message: 'Server error'});
+		console.log(error);
 	}
 };
