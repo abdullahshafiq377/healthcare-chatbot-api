@@ -26,7 +26,7 @@ connectDB()
 
 // Middleware
 app.use(express.json());
-// app.set('trust proxy', true); // Trust the first proxy
+app.set('trust proxy', true); // Trust the first proxy
 app.use(cookieParser());
 app.use(cors({
 	             origin: ['http://localhost:3000', 'https://www.vaccinesupport.co'],
@@ -46,7 +46,7 @@ app.use(
 		                                 }),
 		        cookie: {
 			        httpOnly: true,
-			        secure: true,
+			        secure: false,
 			        sameSite: 'none',
 			        maxAge: 1000 * 60 * 60 * 24, // 1 day
 		        },
