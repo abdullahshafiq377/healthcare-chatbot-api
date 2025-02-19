@@ -5,6 +5,16 @@ const Conversation = require('../models/Conversation');
 const Message = require('../models/Message');
 const User = require('../models/User');
 const bcrypt = require('bcryptjs');
+const sendEmail = require('../utils/emailService');
+const crypto = require('crypto');
+const {resetPasswordEmailTemplate} = require('../utils/email-templates'); // For generating random passwords
+
+// Generate a secure random password
+const generateRandomPassword = (length = 12) => {
+	return crypto.randomBytes(length)
+	             .toString('hex')
+	             .slice(0, length);
+};
 
 // Get all users (Admin only)
 exports.getAllUsers = async (req, res) => {
@@ -74,18 +84,89 @@ exports.updatePassword = async (req, res) => {
 exports.adminResetUserPassword = async (req, res) => {
 	try {
 		const {userId} = req.params;
-		
 		const user = await User.findById(userId);
 		if (!user) {
 			return res.status(404)
 			          .json({message: 'User not found'});
 		}
 		
-		user.password = await bcrypt.hash(process.env.DEFAULT_PASSWORD, 10);
+		// Generate a new password
+		const newPassword = generateRandomPassword();
+		user.password = await bcrypt.hash(newPassword, 10);
 		await user.save();
 		
+		const emailBody = resetPasswordEmailTemplate.replace('{{name}}', `${user?.firstName} ${user?.lastName}`)
+		                                            .replace('{{newPassword}}', newPassword);
+		
+		// Send email notification
+		await sendEmail(
+			user.email,
+			'Password reset successful',
+			emailBody
+		);
+		
 		res.status(200)
-		   .json({message: 'User password reset successfully'});
+		   .json({message: 'User password reset successfully. An email has been sent to the user.'});
+	} catch (error) {
+		console.error('Error resetting user password:', error);
+		res.status(500)
+		   .json({message: 'Server error'});
+	}
+};
+
+// Forget Password (User resets their own password)
+exports.forgetPassword = async (req, res) => {
+	try {
+		const {email} = req.body;
+		console.log(email);
+		const user = await User.findOne({email});
+		if (!user) {
+			return res.status(404)
+			          .json({message: 'User not found'});
+		}
+		
+		// Generate a new password
+		const newPassword = generateRandomPassword();
+		user.password = await bcrypt.hash(newPassword, 10);
+		await user.save();
+		
+		const emailBody = resetPasswordEmailTemplate.replace('{{name}}', `${user?.firstName} ${user?.lastName}`)
+		                                            .replace('{{newPassword}}', newPassword);
+		
+		// Send email notification
+		await sendEmail(
+			user.email,
+			'Password reset successful',
+			emailBody
+		);
+		
+		res.status(200)
+		   .json({message: 'Password reset successfully. An email has been sent to your registered email address.'});
+	} catch (error) {
+		console.error('Error in forget password:', error);
+		res.status(500)
+		   .json({message: 'Server error'});
+	}
+};
+
+
+// Delete user account and related data
+exports.deleteAccount = async (req, res) => {
+	try {
+		const userId = req.session.user.id;
+		
+		// Delete all reports submitted by the user
+		await Report.deleteMany({user: userId});
+		
+		// Delete all conversations and messages associated with the user
+		await Conversation.deleteMany({user: userId});
+		await Message.deleteMany({user: userId});
+		
+		// Finally, delete the user
+		await User.findByIdAndDelete(userId);
+		
+		res.status(200)
+		   .json({message: 'User account and all associated data deleted permanently'});
 	} catch (error) {
 		res.status(500)
 		   .json({message: 'Server error'});
@@ -93,9 +174,9 @@ exports.adminResetUserPassword = async (req, res) => {
 };
 
 // Delete user account and related data
-exports.deleteAccount = async (req, res) => {
+exports.adminDeleteAccount = async (req, res) => {
 	try {
-		const userId = req.session.user.id;
+		const {userId} = req.params;
 		
 		// Delete all reports submitted by the user
 		await Report.deleteMany({user: userId});

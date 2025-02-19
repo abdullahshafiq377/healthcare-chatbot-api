@@ -1,31 +1,34 @@
-const nodemailer = require("nodemailer");
-const AWS = require("aws-sdk");
+require('dotenv')
+	.config('../../.env');
+const { SESClient, SendEmailCommand } = require('@aws-sdk/client-ses');
+const nodemailer = require('nodemailer');
 
-// Set up AWS SES credentials (Make sure these are set in your environment variables)
-AWS.config.update({
-  accessKeyId: process.env.AWS_ACCESS_KEY_ID,
-  secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
-  region: "us-east-1", // Replace with the AWS region you're using for SES
+// Create an SES client instance
+const sesClient = new SESClient({
+  region: process.env.AWS_REGION, // Make sure to set your AWS region
+  credentials: {
+    accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+  },
 });
 
-// Create a transporter using SES
+// Create a Nodemailer transport using SES
 const transporter = nodemailer.createTransport({
-  SES: new AWS.SES({ apiVersion: "2010-12-01" }), // SES transport
+  SES: { ses: sesClient, aws: require('@aws-sdk/client-ses') },
 });
 
+// Send an email using the transporter
 const sendEmail = async (to, subject, html) => {
   try {
-    const mailOptions = {
+    await transporter.sendMail({
       from: process.env.EMAIL_USER, // Your verified SES email address
       to,
       subject,
       html,
-    };
-
-    await transporter.sendMail(mailOptions);
-    console.log("Email sent successfully");
+    });
+    console.log('Email sent successfully');
   } catch (error) {
-    console.error("Error sending email:", error);
+    console.error('Error sending email:', error);
   }
 };
 

@@ -13,6 +13,7 @@ const userRoutes = require('./routes/userRoutes');
 const morgan = require('morgan');
 const deleteOldConversations = require('./utils/cleanupService');
 const resetDailyLimit = require('./utils/resetDailyLimit');
+const sendEmail = require('./utils/emailService');
 
 const app = express();
 
