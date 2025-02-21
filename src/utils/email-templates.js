@@ -168,7 +168,7 @@ const welcomeEmailTemplate = `<!doctype html>
           created, and you're now part of our community!
         </p>
         <br />
-        <a href="http://www.vaccinesupport.co/en/sign-in"
+        <a href="http://app.vaccinesupport.co/en/sign-in"
            style="margin: auto; text-align: center; padding: 12px 16px; align-items: flex-start; gap: 8px; border-radius: 8px; background: #84cc16; color: black; cursor: pointer; text-decoration: none; font-size: 1rem; font-weight: 500; line-height:20px; text-transform: none;">
           Login Now
         </a>
