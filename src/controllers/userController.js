@@ -7,7 +7,7 @@ const User = require('../models/User');
 const bcrypt = require('bcryptjs');
 const sendEmail = require('../utils/emailService');
 const crypto = require('crypto');
-const {resetPasswordEmailTemplate} = require('../utils/email-templates'); // For generating random passwords
+const {resetPasswordEmailTemplate, inviteFriendEmailTemplate} = require('../utils/email-templates'); // For generating random passwords
 
 // Generate a secure random password
 const generateRandomPassword = (length = 12) => {
@@ -191,6 +191,37 @@ exports.adminDeleteAccount = async (req, res) => {
 		res.status(200)
 		   .json({message: 'User account and all associated data deleted permanently'});
 	} catch (error) {
+		res.status(500)
+		   .json({message: 'Server error'});
+	}
+};
+
+// Admin resets user password
+exports.inviteFriend = async (req, res) => {
+	try {
+		const userId = req.session.user.id;
+		const {firstName, lastName, email} = req.body;
+		const user = await User.findById(userId);
+		if (!user) {
+			return res.status(404)
+			          .json({message: 'User not found'});
+		}
+		
+		const emailBody = inviteFriendEmailTemplate.replace('{{name}}', `${firstName} ${lastName}`)
+		                                           .replace('{{friendName}}', user?.firstName);
+		
+		
+		// Send email notification
+		await sendEmail(
+			email,
+			`Invitation from ${user?.firstName} to join VaxSupport.`,
+			emailBody
+		);
+		
+		res.status(200)
+		   .json({message: 'User invite successfully. An email has been sent to the user.'});
+	} catch (error) {
+		console.error('Error resetting user password:', error);
 		res.status(500)
 		   .json({message: 'Server error'});
 	}

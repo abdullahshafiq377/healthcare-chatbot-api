@@ -5,7 +5,7 @@ const {welcomeEmailTemplate} = require('../utils/email-templates');
 
 exports.register = async (req, res) => {
 	try {
-		const {email, password, firstName, lastName} = req.body;
+		const {email, password, firstName, lastName, phone, birthYear, country, state} = req.body;
 		const userExists = await User.findOne({email});
 		
 		if (userExists) {
@@ -14,7 +14,8 @@ exports.register = async (req, res) => {
 		}
 		
 		const hashedPassword = await bcrypt.hash(password, 10);
-		const newUser = new User({email, password: hashedPassword, firstName, lastName});
+		const newUser = new User(
+			{email, password: hashedPassword, firstName, lastName, phone, birthYear, country, state});
 		await newUser.save();
 		
 		const emailBody = welcomeEmailTemplate.replace('{{firstName}}', `${newUser?.firstName}`);
@@ -67,6 +68,7 @@ exports.login = async (req, res) => {
 	} catch (error) {
 		res.status(500)
 		   .json({message: 'Server error'});
+		console.log(error);
 	}
 };
 
@@ -104,29 +106,32 @@ exports.logout = (req, res) => {
 exports.checkSession = async (req, res) => {
 	try {
 		if (!req.session.user) {
-			return res.json({ isAuthenticated: false });
+			return res.json({isAuthenticated: false});
 		}
-
+		
 		// Check if the user still exists in the database
 		const user = await User.findById(req.session.user.id);
 		if (!user) {
 			// Destroy the session properly
 			req.session.destroy((err) => {
 				if (err) {
-					console.error("Error destroying session:", err);
-					return res.status(500).json({ message: "Error logging out" });
+					console.error('Error destroying session:', err);
+					return res.status(500)
+					          .json({message: 'Error logging out'});
 				}
-				res.clearCookie("connect.sid"); // Remove session cookie
-				return res.json({ isAuthenticated: false, message: "Your account has been deleted." });
-			});
-		} else {
-			return res.json({
-				isAuthenticated: true,
-				user: req.session.user
+				res.clearCookie('connect.sid'); // Remove session cookie
+				return res.json({isAuthenticated: false, message: 'Your account has been deleted.'});
 			});
 		}
+		else {
+			return res.json({
+				                isAuthenticated: true,
+				                user: req.session.user
+			                });
+		}
 	} catch (error) {
-		res.status(500).json({ message: "Server error" });
+		res.status(500)
+		   .json({message: 'Server error'});
 	}
 };
 

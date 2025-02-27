@@ -47,7 +47,7 @@ app.use(
 			        httpOnly: true,
 			        secure: true,
 			        sameSite: 'lax',
-			        maxAge: 1000 * 60 * 60 * 24, // 1 day
+			        maxAge: 1000 * 60 * 60, // 1 hour
 		        },
 	        })
 );
@@ -62,7 +62,7 @@ app.use('/api/users', userRoutes);
 
 // Root route
 app.get('/', (req, res) => {
-	res.send('Hello World!');
+	res.send('Hello!');
 });
 
 const PORT = process.env.PORT || 5000;
