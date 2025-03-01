@@ -15,6 +15,7 @@ const userSchema = new mongoose.Schema(
         // Track message limits
         dailyMessageCount: { type: Number, default: 0 },
         lastMessageDate: { type: Date, default: null },
+        privacyPolicyAcceptedAt: { type: Date, default: null },
     },
     { timestamps: true }
 );

@@ -5,7 +5,7 @@ const {welcomeEmailTemplate} = require('../utils/email-templates');
 
 exports.register = async (req, res) => {
 	try {
-		const {email, password, firstName, lastName, phone, birthYear, country, state} = req.body;
+		const {email, password, firstName, lastName, phone, birthYear, country, state, privacyPolicyAcceptedAt} = req.body;
 		const userExists = await User.findOne({email});
 		
 		if (userExists) {
@@ -15,7 +15,7 @@ exports.register = async (req, res) => {
 		
 		const hashedPassword = await bcrypt.hash(password, 10);
 		const newUser = new User(
-			{email, password: hashedPassword, firstName, lastName, phone, birthYear, country, state});
+			{email, password: hashedPassword, firstName, lastName, phone, birthYear, country, state, privacyPolicyAcceptedAt});
 		await newUser.save();
 		
 		const emailBody = welcomeEmailTemplate.replace('{{firstName}}', `${newUser?.firstName}`);
