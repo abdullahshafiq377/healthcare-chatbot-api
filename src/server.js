@@ -10,6 +10,8 @@ const authRoutes = require('./routes/authRoutes');
 const chatRoutes = require('./routes/chatRoutes');
 const reportRoutes = require('./routes/reportRoutes');
 const userRoutes = require('./routes/userRoutes');
+const countryRoutes = require('./routes/countryRoutes');
+const stateRoutes = require('./routes/stateRoutes');
 const morgan = require('morgan');
 const deleteOldConversations = require('./utils/cleanupService');
 const resetDailyLimit = require('./utils/resetDailyLimit');
@@ -45,7 +47,7 @@ app.use(
 		                                 }),
 		        cookie: {
 			        httpOnly: true,
-			        secure: true,
+			        secure: false,
 			        sameSite: 'lax',
 			        maxAge: 1000 * 60 * 60, // 1 hour
 		        },
@@ -59,6 +61,8 @@ app.use('/api/auth', authRoutes);
 app.use('/api/chat', chatRoutes);
 app.use('/api/reports', reportRoutes);
 app.use('/api/users', userRoutes);
+app.use('/api/countries', countryRoutes);
+app.use('/api/states', stateRoutes);
 
 // Root route
 app.get('/', (req, res) => {
