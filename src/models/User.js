@@ -10,7 +10,7 @@ const userSchema = new mongoose.Schema(
         birthYear: { type: String, required: true },
         country: { type: String, required: true },
         state: { type: String, required: true },
-        role: { type: String, enum: ["user", "admin"], default: "user" },
+        role: { type: String, enum: ["user", "admin"], default: "user", required: true },
 
         // Track message limits
         dailyMessageCount: { type: Number, default: 0 },
